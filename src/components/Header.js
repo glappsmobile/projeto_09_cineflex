@@ -15,7 +15,6 @@ const StyledHeader = styled.header`
     font-family: Roboto;
 `;
 
-
 const Header = () => (
     <StyledHeader>
         <h1>

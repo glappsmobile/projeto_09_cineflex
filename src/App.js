@@ -1,12 +1,12 @@
 import Header from './components/Header';
-import MovieSelection from './screens/MovieSelection/MovieSelection'
+import Main from './components/Main';
 import './reset.css'
 
 function App() {
   return (
     <>
       <Header />
-      <MovieSelection />
+      <Main />
     </>
   );
 }
