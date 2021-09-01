@@ -1,27 +1,20 @@
-import axios from "axios";
+import styled from 'styled-components';
+import axios from 'axios';
 import React, { useState } from 'react'
-import Movie from "./components/Movie";
-import styled from "styled-components";
-
-const Title = styled.h1`
-    margin-top: 117px;
-    margin-bottom: 50px;
-    width: 100%;
-    text-align: center;
-    font-size: 24px;
-    font-family: Roboto;
-    color: #293845;
-`;
+import Movie from './components/Movie';
+import Title from '../../shared/Title'
 
 const MoviesContainer = styled.ul`
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: center;
+    margin-top: 50px;
 `;
 
 const MovieSelection = () => {
     const [movies, setMovies] = useState([]);
-    if (movies.length === 0) { getMovies(setMovies);}
+    if (movies.length === 0) { updateMovies(setMovies); }
+    console.log(movies)
     return (
         <div>
             <Title>Selecione o filme</Title>
@@ -36,7 +29,7 @@ const MovieSelection = () => {
     )
 }
 
-const getMovies = (setMovies) => {
+const updateMovies = (setMovies) => {
     axios.get(`https://mock-api.bootcamp.respondeai.com.br/api/v3/cineflex/movies`)
         .then(res => {
             setMovies([...res.data])

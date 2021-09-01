@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 const StyledHeader = styled.header`
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     display: flex;
@@ -22,6 +22,5 @@ const Header = () => (
         </h1>
     </StyledHeader>
 )
-
 
 export default Header;
