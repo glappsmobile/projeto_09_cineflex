@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import {Link} from 'react-router-dom';
 
 const PosterContainer = styled.li`
     width: ${({ small }) => small ? "64px" : "145px"};
@@ -23,11 +22,9 @@ const Poster = styled.img`
 const MoviePoster = ({title, posterURL, id, small}) => {
 
     return (
-        <Link to={`/sessoes/${id}`}>
-            <PosterContainer small={small} >
-                <Poster src={posterURL} alt={title} />
-            </PosterContainer>
-        </Link>
+        <PosterContainer small={small} >
+            <Poster src={posterURL} alt={title} />
+        </PosterContainer>
     )
 }
 
