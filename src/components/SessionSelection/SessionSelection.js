@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import React, { useState, useEffect } from 'react'
 import Session from './components/Session';
 import Title from '../../shared/Title'
-import MovieInfoFooter from '../../shared/MovieInfoFooter'
+import MovieInfo from '../../shared/MovieInfoFooter'
 import { getShowTimes } from '../../services/api.service'
 
 const ShowTimesContainer = styled.ul`
@@ -38,10 +38,7 @@ const SessionSelection = () => {
                     <h1> Carregando </h1>
                 )}
             </ShowTimesContainer>
-            <MovieInfoFooter 
-                title={movie.title} 
-                posterURL={movie.posterURL} 
-            />
+            <MovieInfo />
         </>
     )
 }
