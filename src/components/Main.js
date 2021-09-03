@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Route, Switch } from 'react-router-dom'
 import MovieSelection from '../screens/MovieSelection/MovieSelection'
 import SessionSelection from '../screens/SessionSelection/SessionSelection'
 
@@ -10,7 +11,11 @@ const StyledMain = styled.main`
 const Main = () => {
     return (
         <StyledMain>
-            <SessionSelection />
+            <Switch>
+                <Route path="/sessoes/:id" component={SessionSelection} exact />
+                <Route path="/" component={MovieSelection} exact />
+            </Switch>
+            
         </StyledMain>
     )
 }
