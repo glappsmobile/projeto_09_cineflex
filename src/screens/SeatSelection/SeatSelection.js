@@ -8,10 +8,29 @@ const SeatsContainer = styled.ul`
     display: grid;
     grid-template-columns: repeat(10, 1fr [col-start]);
     padding: 0 24px;
-    margin-top: 91px;
+    margin-top: 30px;;
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+`;
+
+const SeatsLabelContainer = styled.ul`
+    display: grid;
+    grid-template-columns: repeat(3, 1fr [col-start]);
+    grid-gap: 5%;
+    margin-top: 16px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+
+    &>div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 13px;
+    }
 `;
 
 const Circle = styled.li`
@@ -32,8 +51,15 @@ const Circle = styled.li`
 
         return (isAvailable)? '#C3CFD9' : '#FBE192';
     }};
+    
+    cursor:  ${({ isAvailable, isLabel }) => {
+        if (isLabel){
+            return 'default';
+        }
 
-    cursor:  ${({ isAvailable }) => (isAvailable) ? 'pointer' : 'not-allowed'};
+        return (isAvailable) ? 'pointer' : 'not-allowed'}
+    };
+    
     border: 1px solid #808F9D;
     box-sizing: border-box;
     border-radius: 6vw;
@@ -43,6 +69,7 @@ const Circle = styled.li`
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+    -webkit-tap-highlight-color: transparent;
 `;
 
 const Seat = ({name, isAvailable, isSelected, selectSeat}) => {
@@ -91,12 +118,45 @@ const MovieSelection = () => {
         <div>
             <Title>Selecione o(s) assento(s)</Title>
             {session.seats? (
-                <SeatsContainer>
-                    {session.seats.map((seat) => (
-                        <Seat key={seat.id} selectSeat={selectSeat} {...seat} />
-                    ))}
-                </SeatsContainer>
+                <>
+                    <SeatsContainer>
+                        {session.seats.map((seat) => (
+                            <Seat 
+                                key={seat.id} 
+                                selectSeat={selectSeat} 
+                                {...seat}     
+                            />
+                        ))}
+                    </SeatsContainer>
+
+                    <SeatsLabelContainer>
+                        <div>
+                            <Circle
+                                isSelected={true}
+                                isLabel
+                            />
+                            <span> Selecionado </span>
+                        </div>
+                        
+                        <div>
+                            <Circle
+                                isAvailable={true}
+                                isLabel
+                            />
+                            <span> Disponível </span>
+                        </div>
+                        <div>
+                            <Circle
+                                isAvailable={false}
+                                isLabel
+                            />
+                            <span>Indisponível</span>
+                        </div>
+                            
+                    </SeatsLabelContainer>
+                </>
             ) : "" }
+            
         </div>
     )
 }
