@@ -24,7 +24,7 @@ const InfoContainer = styled.div`
 `;
 
 
-const MovieInfo = ({title, posterURL}) => {
+const MovieInfo = ({title, posterURL, weekday, time}) => {
 
     return (
         <MovieInfoContainer>
@@ -34,7 +34,14 @@ const MovieInfo = ({title, posterURL}) => {
                 small  
             />
             <InfoContainer>
-                {title}
+                <div>
+                    {title}
+                </div>
+                {weekday && (
+                    <div>
+                        {weekday} - {time}
+                    </div>
+                )}  
             </InfoContainer>
         </MovieInfoContainer>
     )

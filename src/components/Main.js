@@ -7,6 +7,9 @@ import SeatSelection from '../screens/SeatSelection/SeatSelection'
 const StyledMain = styled.main`
     margin-top: 64px;
     font-family: Roboto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 `;
 
 const Main = () => {

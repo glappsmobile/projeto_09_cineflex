@@ -2,29 +2,36 @@ import styled from 'styled-components';
 import React, { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import Title from '../../shared/Title'
-import { getSeats } from '../../services/api.service';
+import { getSeats, buySeats } from '../../services/api.service';
+import MovieInfoFooter from '../../shared/MovieInfoFooter'
+import Seat from './components/Seat'
+import Circle from './components/Circle'
+
+const SeatSelectionContaienr = styled.div`
+    width: 90%;
+    max-width: 500px;
+    display: inherit;
+    flex-direction: inherit;
+    align-items: inherit;
+    margin-bottom: 147px;
+`
 
 const SeatsContainer = styled.ul`
     display: grid;
-    grid-template-columns: repeat(10, 1fr [col-start]);
-    padding: 0 24px;
+    gap: 7px;
+    width: 100%;
+    grid-template-columns: repeat(10, 1fr);
     margin-top: 30px;;
     max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
 `;
 
 const SeatsLabelContainer = styled.ul`
     display: grid;
-    grid-template-columns: repeat(3, 1fr [col-start]);
-    grid-gap: 5%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10%;
+    width: 100%;
     margin-top: 16px;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 24px;
-    box-sizing: border-box;
-
+    max-width: 370px;
     &>div {
         display: flex;
         flex-direction: column;
@@ -33,77 +40,99 @@ const SeatsLabelContainer = styled.ul`
     }
 `;
 
-const Circle = styled.li`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 7vw;
-    height: 7vw;
-    max-width: 26px;
-    max-height: 26px;
-    margin-bottom: 18px;
-
-    background-color: ${({isAvailable, isSelected}) => {
-
-        if (isSelected) {
-            return '#8DD7CF';
-        }
-
-        return (isAvailable)? '#C3CFD9' : '#FBE192';
-    }};
-    
-    cursor:  ${({ isAvailable, isLabel }) => {
-        if (isLabel){
-            return 'default';
-        }
-
-        return (isAvailable) ? 'pointer' : 'not-allowed'}
-    };
-    
-    border: 1px solid #808F9D;
-    box-sizing: border-box;
-    border-radius: 6vw;
-    font-size: 11px;
-    color: #000000;
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
-    -webkit-tap-highlight-color: transparent;
+const BuyButton = styled.button`
+    background: #E8833A;
+    border: none;
+    border-radius: 3px;
+    width: 225px;
+    height: 42px;
+    font-size: 18px;
+    color: #FFFFFF;
+    margin-top: 57px;
 `;
 
-const Seat = ({name, isAvailable, isSelected, selectSeat}) => {
+const Form = styled.form`
+    display: flex;
+    flex-direction: column;
+    margin-top: 42px;
+    width: 100%;
 
-    const seatText = (name.length > 1) ? `${name}` : `0${name}`;
-    const select = () => {
-        if (isAvailable) {
-            selectSeat(Number(name) - 1)
-        }
+`
+
+const FormGroup = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    label {
+        margin-bottom: 0.5rem;
+        margin-top: 7px;
     }
 
-    return (
-        <Circle 
-            isAvailable={isAvailable} 
-            isSelected={isSelected}
-            onClick={select}
-        > 
-            {seatText} 
-        </Circle>
-    )
-}
+    input {
+        height: 51px;
+        background: #FFFFFF;
+        border: 1px solid #D5D5D5;
+        box-sizing: border-box;
+        border-radius: 3px;
+        font-size: 18px;
+        padding-left: 18px;
+    }
+`;
 
-
-const MovieSelection = () => {
-
+const SeatSelection = () => {
     const { id } = useParams();
     const [session, setSession] = useState([]);
+    const [order, setOrder] = useState({name: "", cpf: "", ids: []});
 
     const selectSeat = (index) => {
-        const newArraySeats = [...session.seats];
-        newArraySeats[index].isSelected = !newArraySeats[index].isSelected;
-        const newSession = {...session};
-        newSession.seats = newArraySeats;
+        const newSession = { ...session };
+        const doSelect = !newSession.seats[index].isSelected;
+        newSession.seats[index].isSelected = doSelect;
         setSession(newSession);
+
+        const newOrder = {...order};
+        const selectedId = session.seats[index].id;
+
+        if (doSelect) {
+            newOrder.ids.push(selectedId);
+        } else {
+            newOrder.ids = newOrder.ids.filter((id) => id !== selectedId);
+        }
+
+        setOrder(newOrder);
+    }
+
+    const setCpf = (cpf) => {
+        setOrder({ ...order, cpf})
+    }
+
+    const setName = (name) => {
+        let treatedName = name.replace(/[0-9]/g, '');
+
+        setOrder({ ...order, name: treatedName })
+    }
+
+
+    const isValidName = (name) => /^([\u00C0-\u017FA-Za-z]{2}[ \u00C0-\u017FA-Za-z]*)$/.test(name);
+
+    const isValidPurchase = () => {
+        let isValid = true;
+        if (!isValidName(order.name)) {
+            alert("nome invalido");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    const finishOrder = () =>{
+        if (!isValidPurchase()) {
+            return;
+        }
+
+        buySeats(order)
+        .then(console.log)
+        .catch((error) => console.log(error.response))
     }
 
     useEffect(() => {
@@ -114,8 +143,9 @@ const MovieSelection = () => {
             });
     }, [id]);
 
+    console.log(order)
     return (
-        <div>
+        <SeatSelectionContaienr>
             <Title>Selecione o(s) assento(s)</Title>
             {session.seats? (
                 <>
@@ -131,35 +161,58 @@ const MovieSelection = () => {
 
                     <SeatsLabelContainer>
                         <div>
-                            <Circle
-                                isSelected={true}
-                                isLabel
-                            />
+                            <Circle isSelected={true} isLabel />
                             <span> Selecionado </span>
                         </div>
                         
                         <div>
-                            <Circle
-                                isAvailable={true}
-                                isLabel
-                            />
+                            <Circle isAvailable={true} isLabel />
                             <span> Disponível </span>
                         </div>
+
                         <div>
-                            <Circle
-                                isAvailable={false}
-                                isLabel
-                            />
+                            <Circle isAvailable={false} isLabel />
                             <span>Indisponível</span>
                         </div>
-                            
                     </SeatsLabelContainer>
+                    
+                    <Form>
+                        <FormGroup>
+                            <label> Nome do comprador: </label>
+                            <input 
+                                type="text"
+                                placeholder="Digite seu nome..."
+                                onChange={(e) => setName(e.target.value)}
+                                value={order.name}
+                            />
+                        </FormGroup>
+
+                        <FormGroup>
+                            <label> CPF do comprador: </label>
+                            <input
+                                type="text"
+                                placeholder="Digite seu CPF..."
+                                onChange={(e) => setCpf(e.target.value)}
+                                value={order.cpf}
+                            />
+                        </FormGroup>
+                    </Form>
+                  
+                    <BuyButton onClick={finishOrder}> Reservar assento(s)</BuyButton>
+                   
+
+                    <MovieInfoFooter
+                        title={session.movie.title}
+                        posterURL={session.movie.posterURL}
+                        weekday={session.day.weekday}
+                        time={session.name}
+                    />
                 </>
             ) : "" }
             
-        </div>
+        </SeatSelectionContaienr>
     )
 }
 
 
-export default MovieSelection;
+export default SeatSelection;
