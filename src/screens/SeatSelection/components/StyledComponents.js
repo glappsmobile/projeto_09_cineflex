@@ -73,17 +73,6 @@ const SeatsLabelContainer = styled.ul`
     }
 `;
 
-const BuyButton = styled.button`
-    background: #E8833A;
-    border: none;
-    border-radius: 3px;
-    width: 225px;
-    height: 42px;
-    font-size: 18px;
-    color: #FFFFFF;
-    margin-top: 57px;
-`;
-
 const Form = styled.form`
     display: flex;
     flex-direction: column;
@@ -96,10 +85,11 @@ const FormGroupTitle = styled.span`
     font-weight: bold;
     margin-top: 20px;
 
-    &:first-child {
+    &:last-child {
         margin-top: 0px;
+        background-color: red;
     }
-`
+`;
 
 const FormGroup = styled.div`
     display: flex;
@@ -136,5 +126,4 @@ export {
     Form,
     FormGroupTitle,
     FormGroup,
-    BuyButton,
 }

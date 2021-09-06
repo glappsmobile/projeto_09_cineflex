@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom';
+import { Redirect, useParams } from 'react-router-dom';
 import Title from '../../shared/Title'
 import { getSeats, buySeats } from '../../services/api.service';
 import MovieInfoFooter from '../../shared/MovieInfoFooter'
+import Loading from '../../shared/Loading'
+import Button from '../../shared/Button'
 import Seat from './components/Seat'
 import {cpfMask, removeCpfMask} from '../../helpers/cpfMask'
 import {
     Circle,
     Form, 
     FormGroup, 
-    BuyButton, 
     FormGroupTitle, 
     SeatSelectionContaienr, 
     SeatsContainer, 
     SeatsLabelContainer
 } from './components/StyledComponents'
 
+
 const SeatSelection = () => {
     const { id } = useParams();
     const [session, setSession] = useState([]);
     const [order, setOrder] = useState({compradores:[], ids: []});
+    const [loading, setLoading] = useState({ isLoading: false, success: false });
     const [forms, setForms] = useState([]);
-
+    
     const selectSeat = (index) => {
         const clickedSeat = session.seats[index];
         const selectedId = clickedSeat.id;
@@ -46,13 +49,12 @@ const SeatSelection = () => {
         } else {
             newOrder.ids = newOrder.ids.filter((id) => id !== selectedId);
             newOrder.compradores = newOrder.compradores.filter(({ idAssento }) => idAssento !== selectedId);
-
             newForms = newForms.filter((form) => form.seatId !== selectedId);
         }
 
-       newOrder.ids.sort((a, b) => a - b);
-       newOrder.compradores.sort((a, b) => a.idAssento - b.idAssento);
-       newForms.sort((a, b) => a.seatId - b.seatId);
+        newOrder.ids.sort((a, b) => a - b);
+        newOrder.compradores.sort((a, b) => a.idAssento - b.idAssento);
+        newForms.sort((a, b) => a.seatId - b.seatId);
         setForms(newForms);
         setOrder(newOrder);
     }
@@ -82,6 +84,7 @@ const SeatSelection = () => {
     }
 
     const isValidName = (name) => /^([\u00C0-\u017FA-Za-z]{2}[ \u00C0-\u017FA-Za-z]*)$/.test(name);
+    
     const isCpfValid = (cpf) => cpf.replace(/[^0-9]/g, '').length === 11;
 
     const isValidPurchase = () => {
@@ -117,12 +120,16 @@ const SeatSelection = () => {
             return;
         }
 
+        setLoading({ isLoading: true, success: false });
         buySeats(order)
-        .then(console.log)
-        .catch((error) => console.log(error.response));
-
-        console.log("Bought:")
-        console.log(order);
+        .then(() => {
+            setLoading({isLoading: false, success: true});
+        })
+        .catch((error) => {
+            setLoading({ isLoading: false, success: false });
+            alert("Ocorreu um erro ao finalizar a compra.")
+            console.log(error.response)
+        });
     }
 
     useEffect(() => {
@@ -137,12 +144,37 @@ const SeatSelection = () => {
             });
     }, [id]);
 
-    console.log(order)
+    if (loading.isLoading) {
+        return (
+            <Loading />
+        )
+    }
+
+
+    if (loading.success) {
+        const seatNames = forms.map((form) => form.seatName);
+
+        return (<Redirect to={{
+            pathname: "/sucesso",
+            state: {
+                order: { 
+                    ...order,
+                    seatNames,
+                    session: {
+                        name: session.movie.title,
+                        date: session.day.date,
+                        time: session.name
+                    }
+
+                }
+            }
+        }} />)
+    }
 
     return (
         <SeatSelectionContaienr>
             <Title>Selecione o(s) assento(s)</Title>
-            {session.seats? (
+            {(session.seats && !loading.isLoading)? (
                 <>
                     <SeatsContainer>
                         {session.seats.map((seat) => (
@@ -154,7 +186,7 @@ const SeatSelection = () => {
                             />
                         ))}
                     </SeatsContainer>
-
+                    
                     <SeatsLabelContainer>
                         <div>
                             <Circle isSelected={true} isLabel />
@@ -173,6 +205,7 @@ const SeatSelection = () => {
                     </SeatsLabelContainer>
                     
                     { forms.length > 0 && (
+                        
                     <Form>
                         {forms.map((form, index) => (
                         <React.Fragment key={index}>
@@ -204,8 +237,8 @@ const SeatSelection = () => {
                         ))}
                     </Form>
                     )}
-                    <BuyButton onClick={finishOrder}> Reservar assento(s)</BuyButton>
-                   
+
+                    <Button onClick={finishOrder}> Reservar assento(s)</Button>
 
                     <MovieInfoFooter
                         title={session.movie.title}
@@ -214,7 +247,9 @@ const SeatSelection = () => {
                         time={session.name}
                     />
                 </>
-            ) : "" }
+            ) : (
+                <Loading />
+            ) }
             
         </SeatSelectionContaienr>
     )

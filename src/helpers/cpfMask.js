@@ -9,10 +9,7 @@
 }
 
 
-const removeCpfMask = (cpf) => {
-    return cpf
-        .replace(/\D/g, '')
-}
+const removeCpfMask = (cpf) => cpf.replace(/\D/g, '');
 
 export  {
     cpfMask,

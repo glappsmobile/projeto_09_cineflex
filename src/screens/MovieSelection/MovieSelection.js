@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import Movie from '../../shared/MoviePoster';
 import Title from '../../shared/Title'
 import { getMovies } from '../../services/api.service';
+import Loading from '../../shared/Loading'
 
 const MoviesContainer = styled.ul`
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: center;
+    width: 90vw;
     margin-top: 50px;
 `;
 
@@ -31,11 +33,10 @@ const MovieSelection = () => {
                     ))}
                 </MoviesContainer>
             ) : (
-                <h1> Carregando </h1>
+                <Loading />
             )}
         </div>
     )
 }
-
 
 export default MovieSelection;

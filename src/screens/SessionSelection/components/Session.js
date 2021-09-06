@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const TimeRectangle = styled.div`
     display: flex;
@@ -31,9 +32,11 @@ const Session = ({weekday, date, showtimes}) => {
 
             <ShowTimesContainer>
                 {showtimes.map((showtime, index) => (
-                    <TimeRectangle key={index}>
-                        {showtime.name}
-                    </TimeRectangle>
+                    <Link to={`/assentos/${showtime.id}`} key={index} >
+                        <TimeRectangle>
+                            {showtime.name}
+                        </TimeRectangle>
+                    </ Link>
                 ))}
             </ShowTimesContainer>
             
