@@ -1,127 +1,114 @@
-import styled from 'styled-components';
 import React, { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom';
 import Title from '../../shared/Title'
 import { getSeats, buySeats } from '../../services/api.service';
 import MovieInfoFooter from '../../shared/MovieInfoFooter'
 import Seat from './components/Seat'
-import Circle from './components/Circle'
-
-const SeatSelectionContaienr = styled.div`
-    width: 90%;
-    max-width: 500px;
-    display: inherit;
-    flex-direction: inherit;
-    align-items: inherit;
-    margin-bottom: 147px;
-`
-
-const SeatsContainer = styled.ul`
-    display: grid;
-    gap: 7px;
-    width: 100%;
-    grid-template-columns: repeat(10, 1fr);
-    margin-top: 30px;;
-    max-width: 500px;
-`;
-
-const SeatsLabelContainer = styled.ul`
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10%;
-    width: 100%;
-    margin-top: 16px;
-    max-width: 370px;
-    &>div {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-size: 13px;
-    }
-`;
-
-const BuyButton = styled.button`
-    background: #E8833A;
-    border: none;
-    border-radius: 3px;
-    width: 225px;
-    height: 42px;
-    font-size: 18px;
-    color: #FFFFFF;
-    margin-top: 57px;
-`;
-
-const Form = styled.form`
-    display: flex;
-    flex-direction: column;
-    margin-top: 42px;
-    width: 100%;
-
-`
-
-const FormGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-
-    label {
-        margin-bottom: 0.5rem;
-        margin-top: 7px;
-    }
-
-    input {
-        height: 51px;
-        background: #FFFFFF;
-        border: 1px solid #D5D5D5;
-        box-sizing: border-box;
-        border-radius: 3px;
-        font-size: 18px;
-        padding-left: 18px;
-    }
-`;
+import {cpfMask, removeCpfMask} from '../../helpers/cpfMask'
+import {
+    Circle,
+    Form, 
+    FormGroup, 
+    BuyButton, 
+    FormGroupTitle, 
+    SeatSelectionContaienr, 
+    SeatsContainer, 
+    SeatsLabelContainer
+} from './components/StyledComponents'
 
 const SeatSelection = () => {
     const { id } = useParams();
     const [session, setSession] = useState([]);
-    const [order, setOrder] = useState({name: "", cpf: "", ids: []});
+    const [order, setOrder] = useState({compradores:[], ids: []});
+    const [forms, setForms] = useState([]);
 
     const selectSeat = (index) => {
-        const newSession = { ...session };
-        const doSelect = !newSession.seats[index].isSelected;
-        newSession.seats[index].isSelected = doSelect;
-        setSession(newSession);
+        const clickedSeat = session.seats[index];
+        const selectedId = clickedSeat.id;
+        const newOrder = { ...order };
+        let newForms = [...forms];
 
-        const newOrder = {...order};
-        const selectedId = session.seats[index].id;
-
-        if (doSelect) {
+        if (!order.ids.includes(selectedId)) {
             newOrder.ids.push(selectedId);
+
+            newOrder.compradores.push({
+                idAssento: selectedId,
+                nome: "",
+                cpf: ""
+            });
+
+             newForms.push({
+                 seatId: selectedId,
+                 seatName: clickedSeat.name,
+                 name: { value: "", isValid: true }, 
+                 cpf: { value: "", isValid: true } 
+            });
         } else {
             newOrder.ids = newOrder.ids.filter((id) => id !== selectedId);
+            newOrder.compradores = newOrder.compradores.filter(({ idAssento }) => idAssento !== selectedId);
+
+            newForms = newForms.filter((form) => form.seatId !== selectedId);
         }
 
+       newOrder.ids.sort((a, b) => a - b);
+       newOrder.compradores.sort((a, b) => a.idAssento - b.idAssento);
+       newForms.sort((a, b) => a.seatId - b.seatId);
+        setForms(newForms);
         setOrder(newOrder);
     }
 
-    const setCpf = (cpf) => {
-        setOrder({ ...order, cpf})
+    const setCpf = (cpf, index) => {
+        const newForms = [...forms];
+        newForms[index] = { ...newForms[index], cpf: { value: cpfMask(cpf), isValid: true }}
+        setForms(newForms);
+
+        const newOrder = { ...order };
+        newOrder.compradores[index] = { ...newOrder.compradores[index], cpf: removeCpfMask(cpf) };
+        setOrder(newOrder);
     }
 
-    const setName = (name) => {
-        let treatedName = name.replace(/[0-9]/g, '');
+    const setName = (name, index) => {
+        const newForms = [...forms];
 
-        setOrder({ ...order, name: treatedName })
+        let treatedName = name.replace(/[0-9]/g, '').replace(/^ +/gm, '');;
+        newForms[index] = { ...newForms[index], name: { value: treatedName, isValid: true } }
+        
+        treatedName = treatedName.replace(/\s+$/g, '');
+        setForms(newForms);
+
+        const newOrder = { ...order };
+        newOrder.compradores[index] = { ...newOrder.compradores[index], nome:treatedName};
+        setOrder(newOrder);
     }
-
 
     const isValidName = (name) => /^([\u00C0-\u017FA-Za-z]{2}[ \u00C0-\u017FA-Za-z]*)$/.test(name);
+    const isCpfValid = (cpf) => cpf.replace(/[^0-9]/g, '').length === 11;
 
     const isValidPurchase = () => {
-        let isValid = true;
-        if (!isValidName(order.name)) {
-            alert("nome invalido");
-            isValid = false;
+
+        if (order.ids.length === 0) {
+            alert("Selecione pelo menos um assento.")
+            return false;
         }
 
+        let isValid = true;
+        const newForms = forms.map((form, i) => {
+            const newForm = {...form};
+
+            if (!isValidName(form.name.value)) {
+                isValid = false;
+                newForm.name.isValid = isValid;
+            }
+
+            if (!isCpfValid(form.cpf.value)) {
+                isValid = false;
+                newForm.cpf.isValid = isValid;
+            }
+
+            return newForm;
+        })
+
+        setForms(newForms);
         return isValid;
     }
 
@@ -132,18 +119,26 @@ const SeatSelection = () => {
 
         buySeats(order)
         .then(console.log)
-        .catch((error) => console.log(error.response))
+        .catch((error) => console.log(error.response));
+
+        console.log("Bought:")
+        console.log(order);
     }
 
     useEffect(() => {
         getSeats(id)
             .then((res) => {
-                console.log(res.data);
-                setSession({...res.data});
+                const newSession = {...res.data};
+                newSession.seats = newSession.seats.map((seat) => {
+                    const newName = (seat.name.length > 1) ? `${seat.name}` : `0${seat.name}`;
+                    return {...seat, name: newName }
+                })
+                setSession(newSession);
             });
     }, [id]);
 
     console.log(order)
+
     return (
         <SeatSelectionContaienr>
             <Title>Selecione o(s) assento(s)</Title>
@@ -154,6 +149,7 @@ const SeatSelection = () => {
                             <Seat 
                                 key={seat.id} 
                                 selectSeat={selectSeat} 
+                                isSelected={order.ids.includes(seat.id)}
                                 {...seat}     
                             />
                         ))}
@@ -176,28 +172,38 @@ const SeatSelection = () => {
                         </div>
                     </SeatsLabelContainer>
                     
+                    { forms.length > 0 && (
                     <Form>
-                        <FormGroup>
-                            <label> Nome do comprador: </label>
-                            <input 
-                                type="text"
-                                placeholder="Digite seu nome..."
-                                onChange={(e) => setName(e.target.value)}
-                                value={order.name}
-                            />
-                        </FormGroup>
+                        {forms.map((form, index) => (
+                        <React.Fragment key={index}>
+                            {(forms.length > 1) && (
+                                <FormGroupTitle>Assento {form.seatName}</FormGroupTitle>
+                            )}
+                            <FormGroup isValid={form.name.isValid}>
+                                <label> Nome do comprador: </label>
+                                <input 
+                                    type="text"
+                                    placeholder="Digite o nome do comprador..."
+                                    onChange={(e) => setName(e.target.value, index)}
+                                    value={form.name.value}
+                                />
+                                <span>Informe um nome válido.</span>
+                            </FormGroup>
 
-                        <FormGroup>
-                            <label> CPF do comprador: </label>
-                            <input
-                                type="text"
-                                placeholder="Digite seu CPF..."
-                                onChange={(e) => setCpf(e.target.value)}
-                                value={order.cpf}
-                            />
-                        </FormGroup>
+                            <FormGroup isValid={form.cpf.isValid}>
+                                <label> CPF do comprador: </label>
+                                <input
+                                    type="text"
+                                    placeholder="Digite o CPF do comprador..."
+                                    onChange={(e) => setCpf(e.target.value, index)}
+                                    value={form.cpf.value}
+                                />
+                                <span>Informe um CPF válido.</span>
+                            </FormGroup>
+                        </React.Fragment>
+                        ))}
                     </Form>
-                  
+                    )}
                     <BuyButton onClick={finishOrder}> Reservar assento(s)</BuyButton>
                    
 

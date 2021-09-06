@@ -1,8 +1,7 @@
-import Circle from './Circle'
+import { Circle } from './StyledComponents'
 
 const Seat = ({ name, id, isAvailable, isSelected, selectSeat }) => {
 
-    const seatText = (name.length > 1) ? `${name}` : `0${name}`;
     const select = () => {
         if (isAvailable) {
             selectSeat(Number(name) - 1);
@@ -17,7 +16,7 @@ const Seat = ({ name, id, isAvailable, isSelected, selectSeat }) => {
             isSelected={isSelected}
             onClick={select}
         >
-            {seatText}
+            {name}
         </Circle>
     )
 }
